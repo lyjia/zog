@@ -41,6 +41,7 @@ Log display levels can be modified, with a different setting for screen and disk
 	Bog.allow_only(type = :both, categories = [])
 
 `type` must be `:display`, `:log`, or `:both`.
+
 `categories` is an array of any of the following symbols: `:debug`, `:info`, `:warn`, `:error`, `:fatal`, `:other`
 
 Configuration can be reset with:
