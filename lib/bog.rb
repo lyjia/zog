@@ -6,7 +6,12 @@
 
 class Bog
 
-	@@log_dir = "#{Dir.pwd}/log"
+	if defined?(Rails) 
+		@@log_dir = "#{Rails.root}/log"
+	else
+		@@log_dir = "#{Dir.pwd}/log"	
+	end
+	
 	Dir.mkdir(@@log_dir) unless File.exist?(@@log_dir)
 	@@log_filename = "#{@@log_dir}/bog.log"
 	
@@ -96,8 +101,8 @@ class Bog
 		#/in .([^']+)/.match(s)
 		#ap caller
 		#$1
-
-		caller[3][/`.*'/][1..-2]
+		step = 3
+		caller(step+1)[0][/`.*'/][1..-2]
 	end
 
 end
