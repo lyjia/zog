@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["tom@tomcorelis.com"]
   spec.description   = %q{Colorizing, introspective, independent logging library.}
   spec.summary       = %q{Logging library for Ruby projects with colorization and caller introspection}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/lyjia/zog/"
   spec.license       = "MIT"
 
   spec.files         = ['lib/zog.rb', 'lib/zog/version.rb']
