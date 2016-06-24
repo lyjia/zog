@@ -154,6 +154,7 @@ class Zog
         case writer
           when :Zog
             @@log.puts m.join(" ")
+            @@log.flush
         end
       end
 
