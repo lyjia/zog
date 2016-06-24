@@ -1,10 +1,10 @@
 
-# Bog - an alternate logger
+# Zog - an alternate logger
 # (C) 2012  Lyjia
 # http://www.github.com/lyjia
 #version 1.1
 
-class Bog
+class Zog
 
 	if defined?(Rails) 
 		@@log_dir = "#{Rails.root}/log"
@@ -13,7 +13,7 @@ class Bog
 	end
 	
 	Dir.mkdir(@@log_dir) unless File.exist?(@@log_dir)
-	@@log_filename = "#{@@log_dir}/bog.log"
+	@@log_filename = "#{@@log_dir}/Zog.log"
 	
 	@@log = File.open(@@log_filename, 'a')
 	@@silenced = false
@@ -34,13 +34,13 @@ class Bog
 	end
 
 	def self.shut_up!
-		bog.debug("Shutting up...")
+		Zog.debug("Shutting up...")
 		@@silenced = true
 	end
 
 	def self.talk_again!
 		@@silenced = false
-		bog.debug("I can talk again!")
+		Zog.debug("I can talk again!")
 	end
 	
 	def self.method_missing(meth, *args, &block)
@@ -75,20 +75,20 @@ class Bog
 	end
 	
 	def self.msg(level, msg)
-		m = Bog::format_message(level, msg)
+		m = Zog::format_message(level, msg)
 		
 		displayer = :puts
-		writer = :bog
+		writer = :Zog
 		
 		unless @@silenced == true
 		
 			case displayer
 				when :puts
-					$stderr.puts Bog::colorize(level, m)
+					$stderr.puts Zog::colorize(level, m)
 			end
 			
 			case writer
-				when :bog
+				when :Zog
 					@@log.puts m.join(" ")					
 			end
 				

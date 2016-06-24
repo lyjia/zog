@@ -1,12 +1,12 @@
-# Bog
+# Zog
 
-Bog is a simple logging library for Ruby applications, which renders messages with colorization and caller information attached.
+Zog is a simple logging library for Ruby applications, which renders messages with colorization and caller information attached.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'bog'
+    gem 'Zog'
 
 And then execute:
 
@@ -14,31 +14,31 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install bog
+    $ gem install Zog
 
 ## Usage
 
-Bog will attempt to create a `log/` in the root of your project. (It checks `Rails.root` if it's available, otherwise `Dir.pwd`).
+Zog will attempt to create a `log/` in the root of your project. (It checks `Rails.root` if it's available, otherwise `Dir.pwd`).
 
-Bog manifests as a class of the same name. Various log channels are available as functions of `Bog`.
+Zog manifests as a class of the same name. Various log channels are available as functions of `Zog`.
 
 There are:
 
-	Bog.debug("Yourtext")
-	Bog.info("Yourtext")
-	Bog.warn("Yourtext")
-	Bog.error("Yourtext")
-	Bog.fatal("Yourtext")
-	Bog.other("Yourtext")
+	Zog.debug("Yourtext")
+	Zog.info("Yourtext")
+	Zog.warn("Yourtext")
+	Zog.error("Yourtext")
+	Zog.fatal("Yourtext")
+	Zog.other("Yourtext")
 
 ### Configuration
 
-`Bog.shut_up!` and `Bog.talk_again` will disable and enable logging, respectively.
+`Zog.shut_up!` and `Zog.talk_again` will disable and enable logging, respectively.
 
-Log display levels can be modified, with a different setting for screen and disk output. Bog starts with all message types displayed in all categories, but can be configured with:
+Log display levels can be modified, with a different setting for screen and disk output. Zog starts with all message types displayed in all categories, but can be configured with:
 
-	Bog.deny(type = :both, categories = [])
-	Bog.allow_only(type = :both, categories = [])
+	Zog.deny(type = :both, categories = [])
+	Zog.allow_only(type = :both, categories = [])
 
 `type` must be `:display`, `:log`, or `:both`.
 
@@ -46,7 +46,7 @@ Log display levels can be modified, with a different setting for screen and disk
 
 Configuration can be reset with:
 	
-	Bog.reset
+	Zog.reset
 
 ## Contributing
 
