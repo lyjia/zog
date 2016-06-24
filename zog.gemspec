@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'Zog/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "Zog"
+  spec.name          = "zog"
   spec.version       = Zog::VERSION
   spec.authors       = ["Lyjia"]
   spec.email         = ["tom@tomcorelis.com"]

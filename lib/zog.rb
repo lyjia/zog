@@ -1,36 +1,36 @@
 # Zog - an alternate logger
-# (C) 2012  Lyjia
+# (C) 2012, 2014, 2016  Lyjia
 # http://www.github.com/lyjia
-# version 1.1
+# version 0.4
 
 class Zog
 
-	if defined?(Rails) 
-		@@log_dir = "#{Rails.root}/log"
-	else
-		@@log_dir = "#{Dir.pwd}/log"	
-	end
+  if defined?(Rails)
+    @@log_dir = "#{Rails.root}/log"
+  else
+    @@log_dir = "#{Dir.pwd}/log"
+  end
 
   Dir.mkdir(@@log_dir) unless File.exist?(@@log_dir)
   @@log_filename = "#{@@log_dir}/Zog.log"
 
-  @@log      = File.open(@@log_filename, 'a')
+  @@log = File.open(@@log_filename, 'a')
   @@silenced = false
 
-  LOG_TYPES = { debug: "[35m",
-                info:  "[34m",
+  LOG_CATS = { debug: "[35m",
+                info: "[34m",
 
-                warn:  "[33m",
+                warn: "[33m",
                 error: "[31m",
                 fatal: "[31;1m",
                 other: "[32m" }
 
-  ESC_PREFIX   = "\e"
+  ESC_PREFIX = "\e"
   COLOR_NORMAL = "[0m"
-  TYPES        = [:both, :display, :log]
+  TYPES = [:both, :display, :log]
 
-  @@allowed_disp = LOG_TYPES.keys
-  @@allowed_log  = LOG_TYPES.keys
+  @@allowed_disp = LOG_CATS.keys
+  @@allowed_log = LOG_CATS.keys
 
 
   # User-facing functions
@@ -38,7 +38,7 @@ class Zog
     raise ArgumentError, "Invalid type #{type}, must be one of these symbols: "<<TYPES.join(" ") unless TYPES.include?(type)
 
     cats.each do |c|
-      raise ArgumentError, "Invalid category #{c}, must be one of these symbols: "<<LOG_TYPES.keys.join(" ") unless LOG_TYPES.keys.include?(c)
+      raise ArgumentError, "Invalid category #{c}, must be one of these symbols: "<<LOG_CATS.keys.join(" ") unless LOG_CATS.keys.include?(c)
     end
 
     if type == :both || type == :display
@@ -56,6 +56,7 @@ class Zog
     self.info("Allowed categories changed. Display: #{@@allowed_disp}, log: #{@@allowed_log}")
 
   end
+
 
   def self.deny(type = :both, cats = [])
     raise ArgumentError, "Invalid type, must be one of these symbols: "<<TYPES.join(" ") unless TYPES.include?(type)
@@ -75,10 +76,11 @@ class Zog
 
 
   def self.reset
-    @@allowed_disp = LOG_TYPES.keys
-    @@allowed_log  = LOG_TYPES.keys
+    @@allowed_disp = LOG_CATS.keys
+    @@allowed_log = LOG_CATS.keys
     self.info("Allowed categories changed. Display: #{@@allowed_disp}, log: #{@@allowed_log}")
   end
+
 
   def self.shut_up!
     Zog.debug("Shutting up...")
@@ -95,10 +97,10 @@ class Zog
   # responds to Zog.info, Zog.error, etc
   def self.method_missing(meth, *args, &block)
 
-    #$stderr.puts "MM: Is meth '#{meth}' a valid word from #{LOG_TYPES.keys}? (#{LOG_TYPES.keys.include?(meth)})"
+    #$stderr.puts "MM: Is meth '#{meth}' a valid word from #{LOG_CATS.keys}? (#{LOG_CATS.keys.include?(meth)})"
     meth = meth.downcase.to_sym
 
-    if LOG_TYPES.keys.include?(meth)
+    if LOG_CATS.keys.include?(meth)
       self::msg(meth, args[0])
     else
       super
@@ -118,7 +120,7 @@ class Zog
 
   def self.colorize(severity, msg)
 
-    color = LOG_TYPES[severity.downcase.to_sym]
+    color = LOG_CATS[severity.downcase.to_sym]
 
     col = "#{ESC_PREFIX}#{color}"
     if [:error, :fatal].include?(severity)
@@ -137,7 +139,7 @@ class Zog
     m = Zog::format_message(level, msg)
 
     displayer = :puts
-    writer    = :Zog
+    writer = :Zog
 
     unless @@silenced == true
 
@@ -159,14 +161,15 @@ class Zog
 
   end
 
-	def self.get_my_caller()
-		#s = caller.grep(/\/app\//)[2]
-		#/in .([^']+)/.match(s)
-		#ap caller
-		#$1
-		step = 3
-		caller(step+1)[0][/`.*'/][1..-2]
-	end
+
+  def self.get_my_caller()
+    #s = caller.grep(/\/app\//)[2]
+    #/in .([^']+)/.match(s)
+    #ap caller
+    #$1
+    step = 3
+    caller(step+1)[0][/`.*'/][1..-2]
+  end
 
 
 end
