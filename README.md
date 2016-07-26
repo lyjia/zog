@@ -6,7 +6,7 @@ Zog is a simple logging library for Ruby applications, which renders messages wi
 
 Add this line to your application's Gemfile:
 
-    gem 'Zog'
+    gem 'zog'
 
 And then execute:
 
@@ -14,7 +14,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install Zog
+    $ gem install zog
 
 ## Usage
 
