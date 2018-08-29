@@ -18,9 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-Zog will attempt to create a `log/` in the root of your project. (It checks `Rails.root` if it's available, otherwise `Dir.pwd`).
-
-Zog manifests as a class of the same name. Various log channels are available as functions of `Zog`.
+Zog manifests as a root singleton class of the same name. Various log channels are available as functions of `Zog`.
 
 There are:
 
@@ -47,6 +45,16 @@ Log display levels can be modified, with a different setting for screen and disk
 Configuration can be reset with:
 	
 	Zog.reset
+	
+## Changelog
+
+### 0.5
+
+ - Major refactor to modularize and expand functionality
+ - Added test suite
+ - File logger now uses Ruby's stdlib `logger`
+ - Zog is now usable as a singleton or as an instantiated class
+ - Added configurable channels, outputs, supports for any number in any combination
 
 ## Contributing
 
