@@ -2,7 +2,7 @@ module Zog
   module Outputs
     class Base
 
-      DEFAULT_CONFIG = Constants::Defaults::CONFIG.dup
+      DEFAULT_CONFIG = Constants::Defaults::CONFIG
 
       def initialize(config = nil)
         configure!(config)
@@ -14,7 +14,7 @@ module Zog
 
       def configure!(config)
         @config = config
-        @config ||= DEFAULT_CONFIG
+        @config ||= DEFAULT_CONFIG.dup
       end
 
       def die!
