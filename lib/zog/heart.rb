@@ -9,6 +9,8 @@ module Zog
 
     LOG_CATS = Constants::Defaults::CATEGORIES
 
+    RESERVED_NAME_ALL = :all
+
     OUTPUT_TYPES = {
         stream: [Zog::Outputs::StreamLogger],
         file:   [Zog::Outputs::FileLogger],
@@ -22,17 +24,6 @@ module Zog
 
     def initialize(steps = 3)
 
-      # if defined?(Rails)
-      #   @log_dir = "#{Rails.root}/log"
-      # else
-      #   @log_dir = "#{Dir.pwd}/log"
-      # end
-      #
-      # Dir.mkdir(@log_dir) unless File.exist?(@log_dir)
-      # @log_filename = "#{@log_dir}/Zog.log"
-      #
-      # @log      = File.open(@log_filename, 'a')
-
       @caller_steps = steps
       @outputs  = {}
       @silenced = false
@@ -42,10 +33,11 @@ module Zog
 
     # User-facing functions
     def allow_only(allowed_name, cats = [])
+      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
 
-      cats = validate_categories(cats)
-
-      @outputs[allowed_name][:categories] = cats
+      allowed_outputs.each do |output_name|
+        @outputs[output_name][:categories] = cats
+      end
 
       report_allowed_categories_change
       return
@@ -55,10 +47,12 @@ module Zog
 
     def allow(allowed_name, cats = [])
 
-      cats = validate_categories(cats)
+      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
 
-      cats.each do |c|
-        @outputs[allowed_name][:categories] += c
+      allowed_outputs.each do |output_name|
+        cats.each do |c|
+          @outputs[output_name][:categories] += c
+        end
       end
 
       report_allowed_categories_change
@@ -68,15 +62,17 @@ module Zog
 
 
     def deny(allowed_name, cats = [])
+      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
 
-      cats = validate_categories(cats)
-
-      cats.each do |c|
-        @outputs[allowed_name][:categories] -= c
+      allowed_outputs.each do |output_name|
+        cats.each do |c|
+          @outputs[output_name][:categories] -= c
+        end
       end
 
       report_allowed_categories_change
       return
+
 
     end
 
@@ -165,20 +161,31 @@ module Zog
     private
 
 
-    def validate_categories(cats)
-      raise ArgumentError, "Invalid type, must be one of these symbols: " << TYPES.join(" ") unless TYPES.include?(type)
+    def validate_categories_and_allowed_name(allowed_name, cats)
+
+      if allowed_name.is_a?(Symbol) && allowed_name != RESERVED_NAME_ALL && @outputs.keys.include?(allowed_name)
+        cats = [allowed_name]
+        allowed_name = RESERVED_NAME_ALL
+      end
+
+      if allowed_name == RESERVED_NAME_ALL
+        allowed_outputs = @outputs.keys
+      else
+        allowed_outputs = [allowed_name]
+      end
+
       cats = [cats] unless cats.is_a?(Array)
 
       cats.each do |c|
         raise ArgumentError, "Invalid category #{c}, must be one of these symbols: " << LOG_CATS.keys.join(" ") unless LOG_CATS.keys.include?(c)
       end
 
-      return cats
+      return allowed_outputs, cats
     end
 
 
     def report_allowed_categories_change
-      self.info("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:categories].join(",")}"})
+      self.info("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:categories].join(",")}"}.join(" "))
     end
 
 
@@ -234,18 +241,51 @@ module Zog
       end
     end
 
+    # class-level functions
+    def self.standard_formatter(kaller, message, severity, format_output, format_date)
+      df     = format_output
+      output = []
 
-    # class-level internal functions
-    def self.get_my_caller(steps = 4) #steps = 4 works for Zog as singleton. Zog as instance
+      df.each do |fmt|
+
+        if fmt.is_a?(Symbol)
+
+          case fmt
+            when :severity
+              output << severity.to_s
+            when :caller
+              output << kaller
+            when :message
+              output << message
+            when :datestamp
+              output << Time.now.strftime(format_date)
+          end
+
+        elsif fmt.is_a?(String)
+
+          output << fmt #these are strings that should be printed as-is
+
+        else
+
+          raise "Not a valid @format token: encounted a #{fmt.class} (only String and Symbol are allowed)"
+        end
+
+      end
+      output
+    end
+
+
+    def self.get_my_caller(steps = 4)
       #s = caller.grep(/\/app\//)[2]
       #/in .([^']+)/.match(s)
       #ap caller
       #$1
-      caller(steps + 1)[0][/`.*'/][1..-2]
+      caller(steps + 1)[0][/`(.[^']+)'/] #extract function name from call stack to $1
+      return $1
     end
 
 
-    def self.format_message(output, format)
+    def self.format_message(output)
       output.join()
     end
 

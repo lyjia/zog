@@ -16,45 +16,33 @@ module Zog
                                                              color_escape:      Constants::BASH_COLOR_ESC_PREFIX
                                                          }).freeze
 
-      # user-facing functions
+      # functions called by Zog::Heart
       def msg(severity, message, kaller)
 
-        df     = @config[:format_output]
-        output = []
-
-        df.each do |fmt|
-
-          if fmt.is_a?(Symbol)
-
-            case fmt
-              when :severity
-                output << severity.to_s
-              when :caller
-                output << kaller
-              when :message
-                output << message
-              when :datestamp
-                output << Time.now.strftime(@config[:format_date])
-            end
-
-          elsif fmt.is_a?(String)
-
-            output << fmt #these are strings that should be printed as-is
-
-          else
-
-            raise "Not a valid format token: encounted a #{fmt.class} (only String and Symbol are allowed)"
-          end
-
-        end
+        output = Zog::Heart::standard_formatter(kaller, message, severity, @config[:format_output], @config[:format_date])
 
         if @config[:colorize] == true
           output = colorize(output, severity)
         end
 
-        message = Zog::Heart.format_message(output, @config)
+        message = Zog::Heart.format_message(output)
         @config[:stream].puts(message)
         @config[:stream].flush
+
+        return
+      end
+
+      # config
+      def configure!(config)
+        super(DEFAULT_CONFIG.merge(config || {}))
+
+        # set colorization fields ahead of time
+        @format = @config[:format_output]
+        @escape = @config[:color_escape]
+        @cats   = @config[:categories_colors]
+
+        @normal = @config[:color_normal]
+        @bold   = @config[:color_bold]
 
         return
       end
@@ -63,50 +51,37 @@ module Zog
       private
 
 
-      # config
-      def configure!(config)
-        super(DEFAULT_CONFIG.merge(config || {}))
-        return
-      end
-
-
       def colorize(output, severity)
-        format = @config[:format_output]
-        escape = @config[:color_escape]
-        cats   = @config[:categories_colors]
 
-        normal = @config[:color_normal]
-        bold   = @config[:color_bold]
+        @format.each_index do |i|
 
-        format.each_index do |i|
-
-          case format[i]
+          case @format[i]
 
             when :severity, :caller #colored by severity
-              color     ||= cats[severity.to_sym]
-              output[i] = escape + color + output[i]
+              color     ||= @cats[severity.to_sym]
+              output[i] = @escape + color + output[i]
 
             when :message, :datestamp #colored white
               if @config[:categories_bolded].include?(severity)
-                output[i] = escape + bold + output[i]
+                output[i] = @escape + @bold + output[i]
               else
-                output[i] = escape + normal + output[i]
+                output[i] = @escape + @normal + output[i]
               end
 
           end
 
-          if format[i].is_a?(String)
+          if @format[i].is_a?(String)
             if @config[:categories_bolded].include?(severity)
-              output[i] = escape + bold + output[i]
+              output[i] = @escape + @bold + output[i]
             else
-              output[i] = escape + normal + output[i]
+              output[i] = @escape + @normal + output[i]
             end
           end
 
         end
 
-        #finally add a bash escape
-        output << escape + Constants::BASH_COLOR_NORMAL
+        #clear our colors from the terminal
+        output << @escape + Constants::BASH_COLOR_NORMAL
         return output
 
       end
