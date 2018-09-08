@@ -16,7 +16,7 @@ Or install it yourself as:
 
     $ gem install zog
 
-## Usage
+## Usage (for 0.4)
 
 Zog manifests as a root singleton class of the same name. Various log channels are available as functions of `Zog`.
 
@@ -48,13 +48,14 @@ Configuration can be reset with:
 	
 ## Changelog
 
-### 0.5
+### 0.5 (Preliminary Changlist)
 
  - Major refactor to modularize and expand functionality
- - Added test suite
+ - Added test suite (TODO)
  - File logger now uses Ruby's stdlib `logger`
  - Zog is now usable as a singleton or as an instantiated class
  - Added configurable channels, outputs, supports for any number in any combination
+ - Documentation rework for 0.5 (TODO)
 
 ## Contributing
 
