@@ -18,8 +18,8 @@ module Zog
                                                          }).freeze
 
       # config
-      def configure!(config)
-        super(DEFAULT_CONFIG.merge(config || {}))
+      def configure!(**config)
+        super(DEFAULT_CONFIG.merge(config))
 
         if defined?(@logger) && !@logger.nil?
           @logger.close

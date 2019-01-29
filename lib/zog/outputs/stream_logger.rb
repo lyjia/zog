@@ -10,7 +10,7 @@ module Zog
                                                              stream:            $stderr,
                                                              colorize:          true,
                                                              categories_bolded: [:error, :fatal],
-                                                             categories_colors: Constants::Defaults::CATEGORY_COLORS,
+                                                             categories_colors: Constants::Defaults::CATEGORIES.map{|cat,details| [cat, details[:color]] }.to_h,
                                                              color_normal:      Constants::BASH_COLOR_NORMAL,
                                                              color_bold:        Constants::BASH_COLOR_BOLD,
                                                              color_escape:      Constants::BASH_COLOR_ESC_PREFIX
@@ -33,8 +33,8 @@ module Zog
       end
 
       # config
-      def configure!(config)
-        super(DEFAULT_CONFIG.merge(config || {}))
+      def configure!(**config)
+        super(DEFAULT_CONFIG.merge(config))
 
         # set colorization fields ahead of time
         @format = @config[:format_output]

@@ -7,8 +7,6 @@
 module Zog
   class Heart
 
-    LOG_CATS = Constants::Defaults::CATEGORIES
-
     RESERVED_NAME_ALL = :all
 
     OUTPUT_TYPES = {
@@ -22,18 +20,27 @@ module Zog
 
     TYPES = OUTPUT_TYPES.keys
 
+    # User-facing functions
     def initialize(steps = 3)
-
-      @caller_steps = steps
-      @outputs  = {}
-      @silenced = false
+      @categories   = Constants::Defaults::CATEGORIES # The global pool of categories that all outputters draw from
+      @caller_steps = steps # Nbr of steps the caller detector needs to traverse up the call stack
+      @outputs      = {} # All output objects, by output name (key)
+      @silenced     = false # Override, mute all outputs (TODO: remove?)
       reset
     end
 
 
-    # User-facing functions
-    def allow_only(allowed_name, cats = [])
-      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
+    def reset
+      remove_all_outputs
+      add_output(:stream, :stream, nice_name: "Default Stream Writer")
+      add_output(:file, :file, nice_name: "Default File Writer")
+      self._zog_internal("Logging configuration loaded.")
+    end
+
+
+    def allow_only(name, cats = [])
+      allowed_outputs = validate_names(name)
+      cats            = validate_categories(cats)
 
       allowed_outputs.each do |output_name|
         @outputs[output_name][:categories] = cats
@@ -41,13 +48,12 @@ module Zog
 
       report_allowed_categories_change
       return
-
     end
 
 
-    def allow(allowed_name, cats = [])
-
-      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
+    def allow(name, cats = [])
+      allowed_outputs = validate_names(name)
+      cats            = validate_categories(cats)
 
       allowed_outputs.each do |output_name|
         cats.each do |c|
@@ -57,57 +63,50 @@ module Zog
 
       report_allowed_categories_change
       return
-
     end
 
 
-    def deny(allowed_name, cats = [])
-      allowed_outputs, cats = validate_categories_and_allowed_name(allowed_name, cats)
+    def deny(name, cats = [])
+      allowed_outputs = validate_names(name)
+      cats            = validate_categories(cats)
 
       allowed_outputs.each do |output_name|
         cats.each do |c|
-          @outputs[output_name][:categories] -= c
+          @outputs[output_name][:categories] -= [c]
         end
       end
 
       report_allowed_categories_change
       return
-
-
-    end
-
-
-    def reset
-      remove_all_outputs
-      add_output(:stream, Constants::NAME_DEFAULT_STREAM, categories: LOG_CATS)
-      add_output(:file, Constants::NAME_DEFAULT_FILE, categories: LOG_CATS)
-      self.info("Configuration loaded.")
     end
 
 
     def silence!
-      self.debug("Shutting up...")
+      self._zog_internal("Shutting up...")
       @silenced = true
     end
 
 
     def talk_again!
       @silenced = false
-      self.debug("I can talk again!")
+      self._zog_internal("I can talk again!")
     end
 
 
     alias_method :shut_up!, :silence!
 
 
-    # responds to Zog.info, Zog.error, etc
+    # This is what responds to Zog.info, Zog.error, etc
     def method_missing(meth, *args, &block)
 
-      #$stderr.puts "MM: Is meth '#{meth}' a valid word from #{LOG_CATS.keys}? (#{LOG_CATS.keys.include?(meth)})"
-      meth = meth.downcase.to_sym
+      if @categories.include?(meth)
 
-      if LOG_CATS.include?(meth)
+        if block_given?
+          args[0] = yield block
+        end
+
         self::msg(meth, args[0])
+
       else
         super
       end
@@ -161,77 +160,92 @@ module Zog
     private
 
 
-    def validate_categories_and_allowed_name(allowed_name, cats)
+    def validate_names(output_names)
 
-      if allowed_name.is_a?(Symbol) && allowed_name != RESERVED_NAME_ALL && @outputs.keys.include?(allowed_name)
-        cats = [allowed_name]
-        allowed_name = RESERVED_NAME_ALL
+      if output_names == RESERVED_NAME_ALL
+        output_names = @outputs.keys
+      elsif !output_names.is_a?(Array)
+        output_names = [output_name]
       end
 
-      if allowed_name == RESERVED_NAME_ALL
-        allowed_outputs = @outputs.keys
-      else
-        allowed_outputs = [allowed_name]
+      # validate output names
+      output_names.each do |out|
+        raise ArgumentError, "Invalid output name #{out}, must be one of these names: " << @outputs.keys.map {|a| a.is_a?(Symbol) ? ":#{a}" : "\"#{a}\""}.join(" ") unless @outputs.keys.include?(out)
       end
 
+      return output_names
+
+    end
+
+
+    def validate_categories(cats)
       cats = [cats] unless cats.is_a?(Array)
 
+      # validate category names
+      raise ArgumentError, "You didn't specify any categories!" << nag_categories if cats.length == 0 || cats[0].nil?
+
       cats.each do |c|
-        raise ArgumentError, "Invalid category #{c}, must be one of these symbols: " << LOG_CATS.keys.join(" ") unless LOG_CATS.keys.include?(c)
+        raise ArgumentError, "Invalid category: '#{c}'." << nag_categories unless @categories.keys.include?(c)
       end
 
-      return allowed_outputs, cats
+      return cats
+    end
+
+
+    # @return [Array] List of classes specified by the output type
+    def validate_output_type(output_type)
+      output_type = output_type.to_sym
+      raise ArgumentError, "Type '#{output_type}' must be one of these: #{OUTPUT_TYPES.keys.join(", ")}" unless OUTPUT_TYPES.keys.include?(output_type)
+      return OUTPUT_TYPES[output_type].map {|x| x}
     end
 
 
     def report_allowed_categories_change
-      self.info("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:categories].join(",")}"}.join(" "))
+      self._zog_internal("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:categories].join(",")}"}.join(" "))
     end
 
 
-    def add_output(output_type, name, categories: LOG_CATS.keys, config: nil)
-      output_type = output_type.to_sym
+    ## Output manipulation
+    def add_output(name, output_type, **config)
+      output_classes = validate_output_type(output_type)
+      raise ArgumentError, "Output '#{name}' already exists! Call remove_output('#{name}') first." if @outputs[name]
 
-      raise ArgumentError, "Type '#{output_type}' isn't one of these: #{OUTPUT_TYPES.keys.join(", ")}" unless OUTPUT_TYPES.keys.include?(output_type)
-      raise ArgumentError, "Output '#{name}' already exists! You may want to call remove_output('#{name}') first." if @outputs[name]
+      #categories  = validate_categories(config[:categories] || Constants::Defaults::CATEGORY_NAMES_MINUS_INTERNAL)
+      categories = validate_categories(config[:categories] || Constants::Defaults::CATEGORIES.keys)
 
       @outputs[name] = {
           #config
-          categories: categories,
           config:     config,
+          categories: categories,
 
           #objects
-          outs: OUTPUT_TYPES[output_type].map {|x| x.new(config)},
+          outs: output_classes.map {|x| x.new(config)},
       }
 
     end
 
 
-    def update_output(name, categories: nil, config: nil)
-      raise ArgumentError "Output '#{name}' doesn't exist! Outputs must first be created with add_allowed_output()"
+    def update_output(name, **config)
+      raise ArgumentError "Output '#{name}' does not exist!" unless @outputs[name].present?
 
-      if categories
-        @outputs[name][:categories] = categories
-      end
+      if @outputs[name][:config] = config
 
-      if config
-        @outputs[name][:config] = config
-      end
+        if config[:categories]
+          @outputs[name][:categories] = categories
+        end
 
-      if categories or config
         @outputs[name][:outs].each(&:configure!)
+
       end
 
     end
 
 
     def remove_output(name)
+      raise ArgumentError "Output '#{name}' does not exist!" unless @outputs[name].present?
 
-      if !@outputs[name].nil?
-        @outputs[name][:outs].each(&:die!)
-        delete @outputs[name]
-      end
-
+      @outputs[name][:outs].each(&:die!)
+      return delete @outputs[name]
     end
 
 
@@ -240,6 +254,12 @@ module Zog
         remove_output(k)
       end
     end
+
+
+    def nag_categories()
+      " Please provide a scalar or array with any of these values: " << @categories.keys.join(" ")
+    end
+
 
     # class-level functions
     def self.standard_formatter(kaller, message, severity, format_output, format_date)

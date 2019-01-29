@@ -1,3 +1,5 @@
+require 'logger'
+
 module Zog
   class Constants
 
@@ -5,20 +7,18 @@ module Zog
     BASH_COLOR_NORMAL     = "[0m".freeze
     BASH_COLOR_BOLD       = "[37;1m".freeze
 
-    NAME_DEFAULT_STREAM = "Default Stream Logger".freeze
-    NAME_DEFAULT_FILE   = "Default File Logger".freeze
-
     module Defaults
 
-      CATEGORY_COLORS = { debug: "[35m",
-                          info:  "[34m",
+      CATEGORIES = { debug:    { color: "[35m", stdlib: Logger::DEBUG },
+                     info:     { color: "[34m", stdlib: Logger::INFO },
+                     warn:     { color: "[33m", stdlib: Logger::WARN },
+                     error:    { color: "[31m", stdlib: Logger::ERROR },
+                     fatal:    { color: "[31;1m", stdlib: Logger::FATAL },
+                     other:    { color: "[32m", stdlib: Logger::UNKNOWN },
+                     _zog_internal: { color: "[32m", stdlib: Logger::UNKNOWN },
+                     unknown:  { color: "[32m", stdlib: Logger::UNKNOWN } }.freeze #TODO: make freeze recursive
 
-                          warn:  "[33m",
-                          error: "[31m",
-                          fatal: "[31;1m",
-                          other: "[32m" }.freeze
-
-      CATEGORIES = CATEGORY_COLORS.keys.freeze
+      CATEGORY_NAMES_MINUS_INTERNAL = (CATEGORIES.keys - [:zog_internal])
 
       LOG_FILENAME = "Zog.log".freeze
 
