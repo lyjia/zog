@@ -2,6 +2,8 @@
 
 Zog is a simple logging library for Ruby applications, which renders messages with colorization and caller information attached.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Installation
 
 Add this line to your application's Gemfile:
