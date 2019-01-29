@@ -32,21 +32,54 @@ Or install it yourself as:
 
 ## Usage (for 0.5)
 
-By default, `Zog` manifests as a root singleton class of the same name. You can log to various channels by calling them from `Zog`, or a `Zog` instance.
+### Quick Tour
 
-For example:
+In it's default configuration, `Zog` can be accessed from its global singleton, like so:
+
+    Zog.debug("Hello world!")
+    
+This will produce the following output on-screen (in STDERR):
+
+    20190101-120000 debug in irb_binding(): Hello world!
+    
+And the following output in `./log/zog.log`:
+
+    D, [2019-01-01T12:00:00.000000 #0000] DEBUG -- irb_binding: Hello world!
+    
+To try this out, install `Zog` and load up an IRB console: 
+
+	irb(main):> require 'zog'
+	=> true
 
 	irb(main):> Zog.debug("Hello")
     20190101-120000 debug in irb_binding(): Hello
     => nil
 	
-	irb(main):> Zog.debug("Oh no! Something went wrong!")
+	irb(main):> Zog.error("Oh no! Something went wrong!")
     20190101-120001 error in irb_binding(): Oh no! Something went wrong!
     => nil
 	
+You can instantiate new `Zog` instances like so:
+
+    irb(main):> z = Zog.new
+    => #<Zog::Heart [...]>
+    irb(main):> z.info("Hello from a separate instance!")
+    20190101-120002 info in irb_binding(): Hello from a separate instance!
+    => nil
+
+
+
+#### Available Channels
+
+`Zog` includes all the Ruby `stdlib` channels (`debug`, `info`, `warn`, `error`, `fatal`, and `unknown`) plus an `other` channel and a `_zog_internal` channel (disabled by default). Zog outputs can have separate channel configurations within a single `Zog` instance.
+
 ### Configuration
 
+TODO
 
+## Additional Information
+
+TODO
 	
 ## Changelog
 
