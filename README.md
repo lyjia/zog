@@ -1,8 +1,20 @@
 # Zog
 
-Zog is a simple logging library for Ruby applications, which renders messages with colorization and caller information attached.
 
 [![Build Status](https://travis-ci.org/lyjia/zog.svg?branch=master)](https://travis-ci.org/lyjia/zog) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Zog is an advanced, multi-logging library for Ruby with a simple interface.
+
+You can log to Zog through a globally-available `Zog` module, or manually instantiate multiple instances of `Zog` for whatever logging usage you see fit. While `Zog` instances are designed to be a drop-in replacement for Ruby's stdlib's `Logger` class, they extend `Logger`'s featureset with support for:
+ * Unlimited outputs of multiple types (file logger, stream/stdout/stderr logger)
+ * Unlimited toggleable category channels 
+ * Advanced log message formatting support (color, bold, and more)
+ * Caller identification within the log message
+
+`Zog` makes debugging and monitoring your code a breeze!
+
+Note that version 0.5 is currently ***in development***, do not use this in production code!
+    
 
 ## Installation
 
@@ -18,44 +30,32 @@ Or install it yourself as:
 
     $ gem install zog
 
-## Usage (for 0.4)
+## Usage (for 0.5)
 
-Zog manifests as a root singleton class of the same name. Various log channels are available as functions of `Zog`.
+By default, `Zog` manifests as a root singleton class of the same name. You can log to various channels by calling them from `Zog`, or a `Zog` instance.
 
-There are:
+For example:
 
-	Zog.debug("Yourtext")
-	Zog.info("Yourtext")
-	Zog.warn("Yourtext")
-	Zog.error("Yourtext")
-	Zog.fatal("Yourtext")
-	Zog.other("Yourtext")
-
+	irb(main):> Zog.debug("Hello")
+    20190101-120000 debug in irb_binding(): Hello
+    => nil
+	
+	irb(main):> Zog.debug("Oh no! Something went wrong!")
+    20190101-120001 error in irb_binding(): Oh no! Something went wrong!
+    => nil
+	
 ### Configuration
 
-`Zog.shut_up!` and `Zog.talk_again` will disable and enable logging, respectively.
 
-Log display levels can be modified, with a different setting for screen and disk output. Zog starts with all message types displayed in all categories, but can be configured with:
-
-	Zog.deny(type = :both, categories = [])
-	Zog.allow_only(type = :both, categories = [])
-
-`type` must be `:display`, `:log`, or `:both`.
-
-`categories` is an array of any of the following symbols: `:debug`, `:info`, `:warn`, `:error`, `:fatal`, `:other`
-
-Configuration can be reset with:
-	
-	Zog.reset
 	
 ## Changelog
 
 ### 0.5 (Preliminary Changlist)
 
  - Major refactor to modularize and expand functionality
- - Added test suite (TODO)
+ - Added test suite and CI integration
  - File logger now uses Ruby's stdlib `logger`
- - Zog is now usable as a singleton or as an instantiated class
+ - `Zog` is now usable as a singleton or as an instantiated class
  - Added configurable channels, outputs, supports for any number in any combination
  - Documentation rework for 0.5 (TODO)
 
