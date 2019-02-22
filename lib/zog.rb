@@ -11,12 +11,12 @@ require 'zog/heart'
 
 module Zog
 
-  @@zog ||= Zog::Heart.new(3)
+  @@zog ||= Zog::Heart.new(Constants::Defaults::DEFAULT_NUM_STEPS)
 
   # We don't want the user to instantiate this module,
-  # so override instantiation to a return Zog::Body instance
+  # so fake #new and return a Zog::Body instance
   def self.new(**params)
-    return Zog::Heart.new(2)
+    return Zog::Heart.new(Constants::Defaults::DEFAULT_NUM_STEPS_FAKE)
   end
 
   # We want our user to think this module is the logger, so redirect pretty much all calls to

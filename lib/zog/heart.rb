@@ -21,29 +21,42 @@ module Zog
     TYPES = OUTPUT_TYPES.keys
 
     # User-facing functions
-    def initialize(steps = 3)
-      @categories   = Constants::Defaults::CATEGORIES # The global pool of categories that all outputters draw from
+    def initialize(steps = Constants::Defaults::DEFAULT_NUM_STEPS, **config)
+      # not configurable
+      @all_categories = Constants::Defaults::CATEGORIES # The global pool of categories that all outputters draw from
+
+      # configurable
       @caller_steps = steps # Nbr of steps the caller detector needs to traverse up the call stack
       @outputs      = {} # All output objects, by output name (key)
       @silenced     = false # Override, mute all outputs (TODO: remove?)
-      reset
+
+      configure(**config)
     end
 
 
-    def reset
+    def reset()
       remove_all_outputs
       add_output(:stream, :stream, nice_name: "Default Stream Writer")
       add_output(:file, :file, nice_name: "Default File Writer")
       self._zog_internal("Logging configuration loaded.")
     end
 
+    def configure(**config)
 
-    def allow_only(name, cats = [])
+      if config == {}
+        reset
+      else
+
+      end
+
+    end
+
+    def allow_only(name, cats = CATEGORY_NAMES_MINUS_INTERNAL)
       allowed_outputs = validate_names(name)
       cats            = validate_categories(cats)
 
       allowed_outputs.each do |output_name|
-        @outputs[output_name][:categories] = cats
+        @outputs[output_name][:all_categories] = cats
       end
 
       report_allowed_categories_change
@@ -57,7 +70,7 @@ module Zog
 
       allowed_outputs.each do |output_name|
         cats.each do |c|
-          @outputs[output_name][:categories] += c
+          @outputs[output_name][:all_categories] += c
         end
       end
 
@@ -72,7 +85,7 @@ module Zog
 
       allowed_outputs.each do |output_name|
         cats.each do |c|
-          @outputs[output_name][:categories] -= [c]
+          @outputs[output_name][:all_categories] -= [c]
         end
       end
 
@@ -99,7 +112,7 @@ module Zog
     # This is what responds to Zog.info, Zog.error, etc
     def method_missing(meth, *args, &block)
 
-      if @categories.include?(meth)
+      if @all_categories.include?(meth)
 
         if block_given?
           args[0] = yield block
@@ -121,7 +134,7 @@ module Zog
 
         @outputs.each do |a, v|
           outp = v[:outs]
-          if v[:categories].include?(severity)
+          if v[:all_categories].include?(severity)
             outp.each {|x| x.msg(severity, msg, mycaller)}
           end
         end
@@ -185,7 +198,7 @@ module Zog
       raise ArgumentError, "You didn't specify any categories!" << nag_categories if cats.length == 0 || cats[0].nil?
 
       cats.each do |c|
-        raise ArgumentError, "Invalid category: '#{c}'." << nag_categories unless @categories.keys.include?(c)
+        raise ArgumentError, "Invalid category: '#{c}'." << nag_categories unless @all_categories.keys.include?(c)
       end
 
       return cats
@@ -201,7 +214,7 @@ module Zog
 
 
     def report_allowed_categories_change
-      self._zog_internal("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:categories].join(",")}"}.join(" "))
+      self._zog_internal("Allowed categories changed. Setting is now:" + @outputs.map {|k, v| "#{k}: #{v[:all_categories].join(",")}"}.join(" "))
     end
 
 
@@ -211,12 +224,12 @@ module Zog
       raise ArgumentError, "Output '#{name}' already exists! Call remove_output('#{name}') first." if @outputs[name]
 
       #categories  = validate_categories(config[:categories] || Constants::Defaults::CATEGORY_NAMES_MINUS_INTERNAL)
-      categories = validate_categories(config[:categories] || Constants::Defaults::CATEGORIES.keys)
+      categories = validate_categories(config[:all_categories] || Constants::Defaults::CATEGORIES.keys)
 
       @outputs[name] = {
           #config
-          config:     config,
-          categories: categories,
+          config:         config,
+          all_categories: categories,
 
           #objects
           outs: output_classes.map {|x| x.new(config)},
@@ -230,8 +243,8 @@ module Zog
 
       if @outputs[name][:config] = config
 
-        if config[:categories]
-          @outputs[name][:categories] = categories
+        if config[:all_categories]
+          @outputs[name][:all_categories] = categories
         end
 
         @outputs[name][:outs].each(&:configure!)
@@ -257,7 +270,7 @@ module Zog
 
 
     def nag_categories()
-      " Please provide a scalar or array with any of these values: " << @categories.keys.join(" ")
+      " Please provide a scalar or array with any of these values: " << @all_categories.keys.join(" ")
     end
 
 
