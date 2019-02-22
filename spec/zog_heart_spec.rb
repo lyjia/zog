@@ -1,6 +1,5 @@
 require 'spec_helper'
 
-
 describe "Zog::Heart, the heart of Zog," do
 
   context 'with default config,' do
