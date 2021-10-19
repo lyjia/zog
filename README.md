@@ -6,8 +6,9 @@
 Zog is an advanced, multi-logging library for Ruby with a simple interface.
 
 You can log to Zog through a globally-available `Zog` module, or manually instantiate multiple instances of `Zog` for whatever logging usage you see fit. While `Zog` instances are designed to be a drop-in replacement for Ruby's stdlib's `Logger` class, they extend `Logger`'s featureset with support for:
- * Unlimited outputs of multiple types (file logger, stream/stdout/stderr logger)
- * Unlimited toggleable category channels 
+ * Unlimited outputs of multiple types:
+    * File logger
+    * `STDOUT`/`STDERR`/`IO`/`StringIO` stream logger
  * Advanced log message formatting support (color, bold, and more)
  * Caller identification within the log message
 

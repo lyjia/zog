@@ -5,6 +5,6 @@ task :console do
 	sh "irb -rrubygems -I lib -r Zog.rb"
 end
 
-task :spec do
+task :spec do #why do I need this???
   sh 'rspec'
 end
