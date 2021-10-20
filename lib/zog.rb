@@ -5,7 +5,7 @@
 
 class Zog
 
-  if defined?(Rails)
+  if defined?(Rails) && !Rails.root.nil?
     @@log_dir = "#{Rails.root}/log"
   else
     @@log_dir = "#{Dir.pwd}/log"
