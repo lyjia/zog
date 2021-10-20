@@ -1,5 +1,5 @@
 # Zog - an alternate logger
-# (C) 2012, 2014, 2016  Lyjia
+# (C) 2012, 2014, 2016, 2021  Lyjia
 # http://www.github.com/lyjia
 # version 0.4
 
